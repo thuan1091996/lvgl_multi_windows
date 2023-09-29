@@ -5,7 +5,59 @@
 
 #include "ui.h"
 
+static const char * mbox_options[] = {"Apply", "Close"};
+
+typedef void (*msg_box_callback)(void);
+typedef struct
+{
+	int start_time;
+	int end_time;
+}time_setting_t;
+
+/*
+ * Confirmation message box callback
+ * There are only 2 fixed options: "Apply" and "Close"
+*/
+static void msg_box_confirmation_cb(lv_event_t * e)
+{
+    lv_obj_t * obj = lv_event_get_current_target(e);
+	// Get selected option
+	const char* mbox_selected_btn = lv_msgbox_get_active_btn_text(obj);
+    LV_LOG_USER("%s clicked", mbox_selected_btn);
+	if(strcmp(mbox_selected_btn, "Apply") == 0)
+	{
+		// Get the user data and cast to callback function
+		msg_box_callback callback = (msg_box_callback)e->user_data;
+		if(callback != NULL)
+		{
+			callback();
+		}
+	}
+	else if(strcmp(mbox_selected_btn, "Close") == 0)
+	{
+		LV_LOG_USER("Close\n");
+	}
+	lv_msgbox_close(obj);
+}
+
+void confirmation_msg_box_create(const char* msg, msg_box_callback callback)
+{
+	lv_obj_t * mbox = lv_msgbox_create(NULL, "Confirm action", msg, mbox_options, false);
+	lv_obj_add_event_cb(mbox, msg_box_confirmation_cb, LV_EVENT_VALUE_CHANGED, callback);
+	lv_obj_center(mbox);	
+}
+
+void setRollerTime1(void)
+{
+	int hour_begin = lv_roller_get_selected(ui_rollerHour1);
+	int hour_end = lv_roller_get_selected(ui_rollerHour2);
+	LV_LOG_USER("Set time: %d - %d\n", hour_begin, hour_end);
+}
+
 void onBtnSetTime1(lv_event_t * e)
 {
-	// Your code here
+	LV_LOG_USER("onBtnSetTime1\n");
+	
+    // Create message box
+	confirmation_msg_box_create("SetRollerTime1", setRollerTime1);
 }
